@@ -2,7 +2,7 @@
 <html>
   <head>
   <meta charset='UTF-8'>
-  <title>sql.js</title>
+  <title>sql.js documentation</title>
   <script src='../javascript/application.js'></script>
   <script src='../javascript/search.js'></script>
   <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
@@ -31,9 +31,21 @@
       </table>
       <h2>Overview</h2>
       <div class='docstring'>
-  <p>Represents an prepared statement</p>
+  <p>Represents an prepared statement.</p><p>Prepared statements allow you to have a template sql string,
+that you can execute multiple times with different parameters.</p><p>You can&#39;t instantiate this class directly, you have to use a <a href="Database.html">Database</a>
+object in order to create a statement.</p><p><strong>Warning</strong>: When you close a database (using db.close()), all its statements are
+closed too and become unusable.</p>
 </div>
 <div class='tags'>
+  <h3>See also:</h3>
+  <ul class='see'>
+    <li>
+      <a href='Database.html#prepare-dynamic'>Database.html#prepare-dynamic</a>
+    </li>
+    <li>
+      <a href='https://en.wikipedia.org/wiki/Prepared_statement'>https:&#47;&#47;en.wikipedia.org&#47;wiki&#47;Prepared_statement</a>
+    </li>
+  </ul>
 </div>
       <h2>Instance Method Summary</h2>
       <ul class='summary'>
@@ -46,7 +58,7 @@
       </a>
     </span>
     <span class='desc'>
-      Bind values to the parameters <p>SQL statements can have parameters, named <em>&#39;?&#39;, &#39;?NNN&#39;, &#39;:VVV&#39;, &#39;@VVV&#39;, &#39;$VVV&#39;</em>,
+      Bind values to the parameters, after having reseted the statement <p>SQL statements can have parameters, named <em>&#39;?&#39;, &#39;?NNN&#39;, &#39;:VVV&#39;, &#39;@VVV&#39;, &#39;$VVV&#39;</em>,
 where NNN is a number and VVV a string.</p>
     </span>
   </li>
@@ -67,12 +79,37 @@ where NNN is a number and VVV a string.</p>
     <span class='signature'>
       <a href='#get-dynamic'>
         #
-(Array)
-<b>get</b><span>(values)</span>
+(Array&lt;String,Number,Uint8Array,null&gt;)
+<b>get</b><span>(params)</span>
       </a>
     </span>
     <span class='desc'>
       Get one row of results of a statement. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#getColumnNames-dynamic'>
+        #
+(Array&lt;String&gt;)
+<b>getColumnNames</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Get the list of column names of a row of result of a statement. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#getAsObject-dynamic'>
+        #
+(Object)
+<b>getAsObject</b><span>(params)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Get one row of result as a javascript object, associating column names with their value in the current row.
+
     </span>
   </li>
   <li>
@@ -124,7 +161,7 @@ where NNN is a number and VVV a string.</p>
       <br>
     </p>
     <div class='docstring'>
-  <p>Bind values to the parameters</p><p>SQL statements can have parameters, named <em>&#39;?&#39;, &#39;?NNN&#39;, &#39;:VVV&#39;, &#39;@VVV&#39;, &#39;$VVV&#39;</em>,
+  <p>Bind values to the parameters, after having reseted the statement</p><p>SQL statements can have parameters, named <em>&#39;?&#39;, &#39;?NNN&#39;, &#39;:VVV&#39;, &#39;@VVV&#39;, &#39;$VVV&#39;</em>,
 where NNN is a number and VVV a string.
 This function binds these parameters to the given values.</p><p><em>Warning</em>: &#39;:&#39;, &#39;@&#39;, and &#39;$&#39; are included in the parameters names</p><h2 id="binding-values-to-named-parameters">Binding values to named parameters</h2>
 <pre><code>var stmt = db.prepare(&quot;UPDATE test SET a=@newval WHERE id BETWEEN $mini AND $maxi&quot;);
@@ -259,8 +296,8 @@ that can be retrieved with <a href="#get-dynamic">Statement.get()</a> .</p>
   <div class='method_details'>
     <p class='signature' id='get-dynamic'>
       #
-(Array)
-<b>get</b><span>(values)</span>
+(Array&lt;String,Number,Uint8Array,null&gt;)
+<b>get</b><span>(params)</span>
       <br>
     </p>
     <div class='docstring'>
@@ -288,10 +325,84 @@ while (stmt.step()) console.log(stmt.get());
     <li>
       <span class='type'></span>
       (
-        <tt>Array</tt>
+        <tt>Array&lt;String,Number,Uint8Array,null&gt;</tt>
       )
       &mdash;
       <span class='desc'>One row of result </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='getColumnNames-dynamic'>
+      #
+(Array&lt;String&gt;)
+<b>getColumnNames</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Get the list of column names of a row of result of a statement.</p><pre><code>var stmt = db.prepare(&quot;SELECT 5 AS nbr, x&#39;616200&#39; AS data, NULL AS nothing;&quot;);
+stmt.step(); // Execute the statement
+console.log(stmt.getColumnNames()); // Will print [&#39;nbr&#39;,&#39;data&#39;,&#39;nothing&#39;]
+</code></pre>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Array&lt;String&gt;</tt>
+      )
+      &mdash;
+      <span class='desc'>The names of the columns </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='getAsObject-dynamic'>
+      #
+(Object)
+<b>getAsObject</b><span>(params)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Get one row of result as a javascript object, associating column names with
+their value in the current row.</p><pre><code>var stmt = db.prepare(&quot;SELECT 5 AS nbr, x&#39;616200&#39; AS data, NULL AS nothing;&quot;);
+stmt.step(); // Execute the statement
+console.log(stmt.getAsObject()); // Will print {nbr:5, data: Uint8Array([1,2,3]), nothing:null}
+</code></pre>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>Optional:</span>
+      <span class='type'>
+        (
+          <tt>Array,Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>If set, the values will be bound to the statement, and it will be executed </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Object</tt>
+      )
+      &mdash;
+      <span class='desc'>The row of result </span>
+    </li>
+  </ul>
+  <h3>See also:</h3>
+  <ul class='see'>
+    <li>
+      <a href='[Statement.get](#get-dynamic)'>[Statement.get](#get-dynamic)</a>
     </li>
   </ul>
 </div>
@@ -364,7 +475,7 @@ It also clears all previous bindings</p>
 </div>
     </div>
     <div id='footer'>
-  May 23, 14 06:42:58 by
+  May 24, 14 02:48:41 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

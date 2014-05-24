@@ -2,7 +2,7 @@
 <html>
   <head>
   <meta charset='UTF-8'>
-  <title>sql.js</title>
+  <title>sql.js documentation</title>
   <script src='../javascript/application.js'></script>
   <script src='../javascript/search.js'></script>
   <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
@@ -82,8 +82,7 @@
       </a>
     </span>
     <span class='desc'>
-      Close the database Databases must be closed, or the memory consumption will grow forever
-
+      Close the database, and all associated prepared statements. 
     </span>
   </li>
 </ul>
@@ -236,8 +235,10 @@ stored in the byte array passed in first argument</p>
       <br>
     </p>
     <div class='docstring'>
-  <p>Close the database
-Databases must be closed, or the memory consumption will grow forever</p>
+  <p>Close the database, and all associated prepared statements.</p><p>The memory associated to the database and all associated statements
+will be freed.</p><p><strong>Warning</strong>: A statement belonging to a database that has been closed cannot
+be used anymore.</p><p>Databases <strong>must</strong> be closed, when you&#39;re finished with them, or the
+memory consumption will grow forever</p>
 </div>
 <div class='tags'>
 </div>
@@ -245,7 +246,7 @@ Databases must be closed, or the memory consumption will grow forever</p>
 </div>
     </div>
     <div id='footer'>
-  May 23, 14 06:42:58 by
+  May 24, 14 02:48:41 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
