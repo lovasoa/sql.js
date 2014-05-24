@@ -134,8 +134,20 @@ where NNN is a number and VVV a string.</p>
       </a>
     </span>
     <span class='desc'>
-      Reset a statement, so that it&#39;s parameters can be bound to new values It also clears all previous bindings
+      Reset a statement, so that it&#39;s parameters can be bound to new values It also clears all previous bindings, freeing the memory used by bound parameters.
 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#freemem-dynamic'>
+        #
+(void)
+<b>freemem</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Free the memory allocated during parameter binding 
     </span>
   </li>
   <li>
@@ -443,7 +455,20 @@ Bind the values, execute the statement, ignoring the rows it returns, and resets
     </p>
     <div class='docstring'>
   <p>Reset a statement, so that it&#39;s parameters can be bound to new values
-It also clears all previous bindings</p>
+It also clears all previous bindings, freeing the memory used by bound parameters.</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='freemem-dynamic'>
+      #
+(void)
+<b>freemem</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Free the memory allocated during parameter binding</p>
 </div>
 <div class='tags'>
 </div>
@@ -475,7 +500,7 @@ It also clears all previous bindings</p>
 </div>
     </div>
     <div id='footer'>
-  May 24, 14 02:48:41 by
+  May 24, 14 16:03:56 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
