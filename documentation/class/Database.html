@@ -39,6 +39,18 @@
       <ul class='summary'>
   <li>
     <span class='signature'>
+      <a href='#run-dynamic'>
+        #
+(Database)
+<b>run</b><span>(sql, params)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Execute an SQL query, ignoring the rows it returns. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
       <a href='#exec-dynamic'>
         #
 (Array&lt;QueryResults&gt;)
@@ -46,7 +58,7 @@
       </a>
     </span>
     <span class='desc'>
-      Execute an SQL query, and returns the result 
+      Execute an SQL query, and returns the result. 
     </span>
   </li>
   <li>
@@ -54,7 +66,7 @@
       <a href='#prepare-dynamic'>
         #
 (Statement)
-<b>prepare</b><span>(sql)</span>
+<b>prepare</b><span>(sql, params)</span>
       </a>
     </span>
     <span class='desc'>
@@ -119,6 +131,61 @@ stored in the byte array passed in first argument</p>
       <h2>Instance Method Details</h2>
       <div class='methods'>
   <div class='method_details'>
+    <p class='signature' id='run-dynamic'>
+      #
+(Database)
+<b>run</b><span>(sql, params)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Execute an SQL query, ignoring the rows it returns.</p><p>If you use the params argument, you <strong>cannot</strong> provide an sql string that contains several
+queries (separated by &#39;;&#39;)</p>
+  <div class='examples'>
+    <h3>Examples:</h3>
+    <h4>
+      Insert values in a table
+    </h4>
+    <pre><code class='coffeescript'>  db.run(&quot;INSERT INTO test VALUES (:age, :name)&quot;, {&#39;:age&#39;:18, &#39;:name&#39;:&#39;John&#39;});</code></pre>
+  </div>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>sql</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>a string containing some SQL text to execute </span>
+    </li>
+    <li>
+      <span class='name'>params</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>(<em>optional</em>) When the SQL statement contains placeholders, you can pass them in here. They will be bound to the statement before it is executed. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt><a href='../class/Database.html'>Database</a></tt>
+      )
+      &mdash;
+      <span class='desc'>The database object (usefull for method chaining) </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
     <p class='signature' id='exec-dynamic'>
       #
 (Array&lt;QueryResults&gt;)
@@ -126,7 +193,43 @@ stored in the byte array passed in first argument</p>
       <br>
     </p>
     <div class='docstring'>
-  <p>Execute an SQL query, and returns the result</p>
+  <p>Execute an SQL query, and returns the result.</p><p>This is a wrapper against Database.prepare, Statement.step, Statement.get,
+and Statement.free.</p><p>The result is an array of result elements. There are as many result elements
+as the number of statements in your sql string (statements are separated by a semicolon)</p><p>Each result element is an object with two properties:
+    &#39;columns&#39; : the name of the columns of the result (as returned by Statement.getColumnNames())
+    &#39;values&#39; : an array of rows. Each row is itself an array of values</p><h2 id="example-use">Example use</h2><p>We have the following table, named <em>test</em> :</p><table>
+<thead>
+<tr>
+<th style="text-align:center">id</th>
+<th style="text-align:center">age</th>
+<th style="text-align:center">name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">Ling</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">18</td>
+<td style="text-align:center">Paul</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Markus</td>
+</tr>
+</tbody>
+</table><p>We query it like that:</p><pre><code class="lang-javascript">var db = new SQL.Database();
+var res = db.exec(&quot;SELECT id FROM test; SELECT age,name FROM test;&quot;);
+</code></pre><p><code>res</code> is now :</p><pre><code class="lang-javascript">    [
+         {columns: [&#39;id&#39;], values:[[1],[2],[3]]},
+         {columns: [&#39;age&#39;,&#39;name&#39;], values:[[1,&#39;Ling&#39;],[18,&#39;Paul&#39;],[3,&#39;Markus&#39;]]}
+    ]
+</code></pre>
+
 </div>
 <div class='tags'>
   <h3>Parameters:</h3>
@@ -159,7 +262,7 @@ stored in the byte array passed in first argument</p>
     <p class='signature' id='prepare-dynamic'>
       #
 (Statement)
-<b>prepare</b><span>(sql)</span>
+<b>prepare</b><span>(sql, params)</span>
       <br>
     </p>
     <div class='docstring'>
@@ -177,6 +280,16 @@ stored in the byte array passed in first argument</p>
       </span>
       &mdash;
       <span class='desc'>a string of SQL, that can contain placeholders (&#39;?&#39;, &#39;:VVV&#39;, &#39;:AAA&#39;, &#39;@AAA&#39;) </span>
+    </li>
+    <li>
+      <span class='name'>params</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>(<em>optional</em>) values to bind to placeholders </span>
     </li>
   </ul>
   <h3>Throws:</h3>
@@ -246,7 +359,7 @@ memory consumption will grow forever</p>
 </div>
     </div>
     <div id='footer'>
-  May 24, 14 16:03:56 by
+  May 24, 14 20:21:46 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
