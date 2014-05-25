@@ -63,6 +63,18 @@
   </li>
   <li>
     <span class='signature'>
+      <a href='#each-dynamic'>
+        #
+(Database)
+<b>each</b><span>(sql, params, callback, done)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Execute an sql statement, and call a callback for each row of result. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
       <a href='#prepare-dynamic'>
         #
 (Statement)
@@ -259,6 +271,85 @@ var res = db.exec(&quot;SELECT id FROM test; SELECT age,name FROM test;&quot;);
 </div>
   </div>
   <div class='method_details'>
+    <p class='signature' id='each-dynamic'>
+      #
+(Database)
+<b>each</b><span>(sql, params, callback, done)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Execute an sql statement, and call a callback for each row of result.</p><p><strong>Currently</strong> this method is synchronous, it will not return until the callback has
+been called on every row of the result. But this might change.</p><p>bound to the parameters given as the second argument
+to the query</p>
+  <div class='examples'>
+    <h3>Examples:</h3>
+    <h4>
+      Read values from a table
+    </h4>
+    <pre><code class='coffeescript'>  db.each(&quot;SELECT name,age FROM users WHERE age &gt;= $majority&quot;,
+  				{$majority:18},
+  				function(row){console.log(row.name + &quot; is a grown-up.&quot;)}
+  			);</code></pre>
+  </div>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>sql</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>A string of SQL text. Can contain placeholders that will be </span>
+    </li>
+    <li>
+      <span class='name'>params</span>
+      <span class='type'>
+        (
+          <tt>Array&lt;String,Number,null,Uint8Array&gt;</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>(<em>optional</em>) Parameters to bind  </span>
+    </li>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (
+          <tt>Function(Object)</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>A function that will be called on each row of result </span>
+    </li>
+    <li>
+      <span class='name'>done</span>
+      <span class='type'>
+        (
+          <tt>Function</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>A function that will be called when all rows have been retrieved </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt><a href='../class/Database.html'>Database</a></tt>
+      )
+      &mdash;
+      <span class='desc'>The database object. Usefull for method chaining </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
     <p class='signature' id='prepare-dynamic'>
       #
 (Statement)
@@ -359,7 +450,7 @@ memory consumption will grow forever</p>
 </div>
     </div>
     <div id='footer'>
-  May 24, 14 20:21:46 by
+  May 26, 14 01:01:41 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
