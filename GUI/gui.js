@@ -5,6 +5,13 @@ var commandsElm = document.getElementById('commands');
 var dbFileElm = document.getElementById('dbfile');
 var savedbElm = document.getElementById('savedb');
 
+// Start the worker in which sql.js will run
+var worker = new Worker("../js/worker.sql.js");
+worker.onerror = error;
+
+// Open a database
+worker.postMessage({action:'open'});
+
 // Connect to the HTML element we 'print' to
 function print(text) {
     outputElm.innerHTML = text.replace(/\n/g, '<br>');
@@ -12,32 +19,29 @@ function print(text) {
 function error(e) {
   console.log(e);
 	errorElm.style.height = '2em';
-	errorElm.textContent = e.toString();
+	errorElm.textContent = e.message;
 }
+
 function noerror() {
 		errorElm.style.height = '0';
 }
 
-// Open a database
-var db = new SQL.Database();
-
 // Run a command in the database
 function execute(commands) {
-  try {
-
-  	tic();
-    var data = db.exec(commands);
-    toc("Executing SQL");
+	tic();
+	worker.onmessage = function(event) {
+		var results = event.data.results;
+		toc("Executing SQL");
 
 		tic();
-    outputElm.innerHTML = "";
-    for (var i=0; i<data.length; i++) {
-    	outputElm.appendChild(tableCreate(data[i].columns, data[i].values));
-    }
-    toc("Displaying results");
-  } catch(e) {
-    error(e);
-  }
+		outputElm.innerHTML = "";
+		for (var i=0; i<results.length; i++) {
+			outputElm.appendChild(tableCreate(results[i].columns, results[i].values));
+		}
+		toc("Displaying results");
+	}
+	worker.postMessage({action:'exec', sql:commands});
+	outputElm.textContent = "Fetching results...";
 }
 
 // Create an HTML table
@@ -89,21 +93,28 @@ dbFileElm.onchange = function() {
 	var f = dbFileElm.files[0];
 	var r = new FileReader();
 	r.onload = function() {
-		var Uints = new Uint8Array(r.result);
-		db.close(); // Close the old db (frees memory)
-		db = new SQL.Database(Uints);
-		// Show the schema of the loaded database
-		editor.setValue("SELECT `name`, `sql`\n  FROM `sqlite_master`\n  WHERE type='table';");
-		execEditorContents();
+		worker.onmessage = function () {
+			toc("Loading database from file");
+			// Show the schema of the loaded database
+			editor.setValue("SELECT `name`, `sql`\n  FROM `sqlite_master`\n  WHERE type='table';");
+			execEditorContents();
+		};
+		tic();
+		worker.postMessage({action:'open',buffer:r.result}, [r.result]);
 	}
 	r.readAsArrayBuffer(f);
 }
 
 // Save the db to a file
 function savedb () {
-	var arraybuff = db.export();
-	var blob = new Blob([arraybuff]);
-	var url = window.URL.createObjectURL(blob);
-	window.location = url;
+	worker.onmessage = function(event) {
+		toc("Exporting the database");
+		var arraybuff = event.data.buffer;
+		var blob = new Blob([arraybuff]);
+		var url = window.URL.createObjectURL(blob);
+		window.location = url;
+	};
+	tic();
+	worker.postMessage({action:'export'});
 }
 savedbElm.addEventListener("click", savedb, true);
