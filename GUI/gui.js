@@ -100,7 +100,7 @@ dbFileElm.onchange = function() {
 			execEditorContents();
 		};
 		tic();
-		worker.postMessage({action:'open',buffer:r.result}, [r.result]);
+		worker.postMessage({action:'open',buffer:r.result});
 	}
 	r.readAsArrayBuffer(f);
 }
