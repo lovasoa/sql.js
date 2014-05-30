@@ -41,17 +41,17 @@ if typeof importScripts is 'function' # Detect webworker context
 
 			when 'export'
 				buff = db.export().buffer
-				try {
-					postMessage
-							'id' : data['id']
-							'buffer' : buff
-						, [buff]
-				}
-				catch(error) {
-					postMessage
-							'id' : data['id']
-							'buffer' : buff
-				}
+				try
+				    return postMessage(
+				      id: data["id"]
+				      buffer: buff
+				    , [buff])
+				  catch error
+				    return postMessage(
+				      id: data["id"]
+				      buffer: buff
+				    )
+				  return
 			when 'close'
 				db?.close()
 			else
