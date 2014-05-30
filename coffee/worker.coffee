@@ -14,6 +14,14 @@ if typeof importScripts is 'function' # Detect webworker context
 				postMessage
 					'id': data['id']
 					'ready': true
+			when 'readFileAndOpen'
+				reader = new FileReaderSync()
+				buff = reader.readAsArrayBuffer data['file']
+				createDb (if buff then new Uint8Array(buff) else undefined)
+				postMessage
+					'id': data['id']
+					'ready': true
+
 			when 'exec'
 				if db is null then createDb()
 				if not data['sql'] then throw 'exec: Missing query string'
@@ -33,10 +41,17 @@ if typeof importScripts is 'function' # Detect webworker context
 
 			when 'export'
 				buff = db.export().buffer
-				postMessage
-						'id' : data['id']
-						'buffer' : buff
-					, [buff]
+				try {
+					postMessage
+							'id' : data['id']
+							'buffer' : buff
+						, [buff]
+				}
+				catch(error) {
+					postMessage
+							'id' : data['id']
+							'buffer' : buff
+				}
 			when 'close'
 				db?.close()
 			else

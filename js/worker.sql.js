@@ -467,11 +467,19 @@ if (typeof importScripts === 'function') {
     return db = new SQL.Database(data);
   };
   self.onmessage = function(event) {
-    var buff, callback, data, done;
+    var buff, callback, data, done, reader;
     data = event['data'];
     switch (data != null ? data['action'] : void 0) {
       case 'open':
         buff = data['buffer'];
+        createDb((buff ? new Uint8Array(buff) : void 0));
+        return postMessage({
+          'id': data['id'],
+          'ready': true
+        });
+      case 'readFileAndOpen':
+        reader = new FileReaderSync();
+        buff = reader.readAsArrayBuffer(data['file']);
         createDb((buff ? new Uint8Array(buff) : void 0));
         return postMessage({
           'id': data['id'],
@@ -507,11 +515,19 @@ if (typeof importScripts === 'function') {
         };
         return db.each(data['sql'], data['params'], callback, done);
       case 'export':
-        buff = db["export"]().buffer;
-        return postMessage({
-          'id': data['id'],
-          'buffer': buff
-        }, [buff]);
+       	buff = db["export"]().buffer;
+	try {
+	        return postMessage({
+	          'id': data['id'],
+	          'buffer': buff
+	        }, [buff]);
+	}
+	catch(error) {
+	        return postMessage({
+	          'id': data['id'],
+	          'buffer': buff
+	        });
+	}
       case 'close':
         return db != null ? db.close() : void 0;
       default:
