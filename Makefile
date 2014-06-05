@@ -20,8 +20,8 @@ js/sql.js: optimized
 js/sql%.js: js/shell-pre.js js/sql%-raw.js js/shell-post.js
 	cat $^ > $@
 
-js/sql%-raw.js: c/sqlite3.bc js/api.js exported_functions
-	$(EMCC) $(EMFLAGS) -s EXPORTED_FUNCTIONS=@exported_functions c/sqlite3.bc --post-js js/api.js -o $@
+js/sql%-raw.js: c/sqlite4.bc js/api.js exported_functions
+	$(EMCC) $(EMFLAGS) -s EXPORTED_FUNCTIONS=@exported_functions c/sqlite4.bc --post-js js/api.js -o $@
 
 js/api.js: coffee/api.coffee coffee/exports.coffee coffee/api-data.coffee
 	coffee --bare --compile --join $@ --compile $^
@@ -34,13 +34,13 @@ js/worker.js: coffee/worker.coffee
 js/worker.sql.js: js/sql.js js/worker.js
 	cat $^ > $@
 
-c/sqlite3.bc: c/sqlite3.c
+c/sqlite4.bc: c/sqlite4.c
 	# Generate llvm bitcode
-	$(EMCC) $(CFLAGS) c/sqlite3.c -o c/sqlite3.bc
+	$(EMCC) $(CFLAGS) c/sqlite4.c -o c/sqlite4.bc
 
 module.tar.gz: test package.json AUTHORS README.md js/sql.js
 	tar --create --gzip $^ > $@
 
 clean:
-	rm -rf js/sql*.js js/api.js js/sql*-raw.js c/sqlite3.bc
+	rm -rf js/sql*.js js/api.js js/sql*-raw.js c/sqlite4.bc
 
