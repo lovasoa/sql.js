@@ -79,20 +79,20 @@ class Statement
 	'step': ->
 		if not @stmt then throw "Statement closed"
 		@pos = 1
-		ret = sqlite3_step @stmt
+		ret = sqlite4_step @stmt
 		if ret is SQLite.ROW then return true
 		else if ret is SQLite.DONE then return false
 		else throw 'SQLite error: ' + handleErrors ret
 
 	# Internal methods to retrieve data from the results of a statement that has been executed
 	# @nodoc
-	getNumber: (pos = @pos++) -> sqlite3_column_double @stmt, pos
+	getNumber: (pos = @pos++) -> sqlite4_column_double @stmt, pos
 	# @nodoc
-	getString: (pos = @pos++) -> sqlite3_column_text @stmt, pos
+	getString: (pos = @pos++) -> sqlite4_column_text @stmt, pos
 	# @nodoc
 	getBlob: (pos = @pos++) ->
-		size = sqlite3_column_bytes @stmt, pos
-		ptr = sqlite3_column_blob @stmt, pos
+		ptr = sqlite4_column_blob @stmt, pos, apiTemp
+		size = getValue apiTemp, 'i32'
 		result = new Uint8Array(size)
 		result[i] = HEAP8[ptr+i] for i in [0 ... size]
 		return result
@@ -109,8 +109,8 @@ class Statement
 	###
 	'get': (params) -> # Get all fields
 		if params? then @['bind'](params) and @['step']()
-		for field in [0 ... sqlite3_data_count(@stmt)]
-			switch sqlite3_column_type @stmt, field
+		for field in [0 ... sqlite4_data_count(@stmt)]
+			switch sqlite4_column_type @stmt, field
 				when SQLite.INTEGER, SQLite.FLOAT then @getNumber field
 				when SQLite.TEXT then @getString field
 				when SQLite.BLOB then @getBlob field
@@ -125,7 +125,7 @@ class Statement
 		console.log(stmt.getColumnNames()); // Will print ['nbr','data','nothing']
 	###
 	'getColumnNames' : () ->
-			sqlite3_column_name @stmt, i for i in [0 ... sqlite3_data_count(@stmt)]
+			sqlite4_column_name @stmt, i for i in [0 ... sqlite4_data_count(@stmt)]
 
 	### Get one row of result as a javascript object, associating column names with
 	their value in the current row.
@@ -161,27 +161,27 @@ class Statement
 	bindString: (string, pos = @pos++) ->
 		bytes = intArrayFromString(string)
 		@allocatedmem.push strptr = allocate bytes, 'i8', ALLOC_NORMAL
-		ret = sqlite3_bind_text @stmt, pos, strptr, bytes.length, 0
+		ret = sqlite4_bind_text @stmt, pos, strptr, bytes.length, 0
 		if ret is SQLite.OK then return true
 		err = handleErrors ret
 		if err isnt null then throw 'SQLite error : ' + err
 	# @nodoc
 	bindBlob: (array, pos = @pos++) ->
 		@allocatedmem.push blobptr = allocate array, 'i8', ALLOC_NORMAL
-		ret = sqlite3_bind_blob @stmt, pos, blobptr, array.length, 0
+		ret = sqlite4_bind_blob @stmt, pos, blobptr, array.length, 0
 		if ret is SQLite.OK then return true
 		err = handleErrors ret
 		if err isnt null then throw 'SQLite error : ' + err
 	# @private
 	# @nodoc
 	bindNumber: (num, pos = @pos++) ->
-		bindfunc = if num is (num|0) then sqlite3_bind_int else sqlite3_bind_double
+		bindfunc = if num is (num|0) then sqlite4_bind_int else sqlite4_bind_double
 		ret = bindfunc @stmt, pos, num
 		if ret is SQLite.OK then return true
 		err = handleErrors ret
 		if err isnt null then throw 'SQLite error : ' + err
 	# @nodoc
-	bindNull: (pos = @pos++) -> sqlite3_bind_blob(@stmt, pos, 0,0,0) is SQLite.OK
+	bindNull: (pos = @pos++) -> sqlite4_bind_blob(@stmt, pos, 0,0,0) is SQLite.OK
 	# Call bindNumber or bindString appropriatly
 	# @private
 	# @nodoc
@@ -200,7 +200,7 @@ class Statement
 	###
 	bindFromObject : (valuesObj) ->
 		for name, value of valuesObj
-			num = sqlite3_bind_parameter_index @stmt, name
+			num = sqlite4_bind_parameter_index @stmt, name
 			if num isnt 0 then @bindValue value, num
 		return true
 	### Bind values to numbered parameters
@@ -217,8 +217,8 @@ class Statement
 	###
 	'reset' : ->
 		@freemem()
-		sqlite3_reset(@stmt) is SQLite.OK and
-		sqlite3_clear_bindings(@stmt) is SQLite.OK
+		sqlite4_reset(@stmt) is SQLite.OK and
+		sqlite4_clear_bindings(@stmt) is SQLite.OK
 
 	### Free the memory allocated during parameter binding
 	###
@@ -231,7 +231,7 @@ class Statement
 	###
 	'free': ->
 		@freemem()
-		res = sqlite3_finalize(@stmt) is SQLite.OK
+		res = sqlite4_finalize(@stmt) is SQLite.OK
 		@stmt = NULL
 		return res
 
@@ -243,7 +243,7 @@ class Database
 	constructor: (data) ->
 		@filename = 'dbfile_' + (0xffffffff*Math.random()>>>0)
 		if data? then FS.createDataFile '/', @filename, data, true, true
-		ret = sqlite3_open @filename, apiTemp
+		ret = sqlite4_open NULL, @filename, apiTemp
 		if ret isnt SQLite.OK then throw 'SQLite error: ' + SQLite.errorMessages[ret]
 		@db = getValue(apiTemp, 'i32')
 		@statements = [] # A list of all prepared statements of the database
@@ -268,7 +268,7 @@ class Database
 			stmt['step']()
 			stmt['free']()
 		else
-			ret = sqlite3_exec @db, sql, 0, 0, apiTemp
+			ret = sqlite4_exec @db, sql, 0, 0, apiTemp
 			err = handleErrors ret, apiTemp
 			if err isnt null then throw 'SQLite error : ' + err
 		return @
@@ -369,7 +369,7 @@ class Database
 	###
 	'prepare': (sql, params) ->
 		setValue apiTemp, 0, 'i32'
-		ret = sqlite3_prepare_v2 @db, sql, -1, apiTemp, NULL
+		ret = sqlite4_prepare @db, sql, -1, apiTemp, NULL
 		err = handleErrors ret, NULL
 		if err isnt null then throw 'SQLite error: ' + err
 		pStmt = getValue apiTemp, 'i32' #  pointer to a statement, or null
@@ -380,7 +380,7 @@ class Database
 		return stmt
 
 	### Exports the contents of the database to a binary array
-	@return [Uint8Array] An array of bytes of the SQLite3 database file
+	@return [Uint8Array] An array of bytes of the sqlite4 database file
 	###
 	'export': -> new Uint8Array FS.root.contents[@filename].contents
 
@@ -397,7 +397,7 @@ class Database
 	###
 	'close': ->
 		stmt['free']() for stmt in @statements
-		ret = sqlite3_close_v2 @db
+		ret = sqlite4_close @db
 		if ret isnt 0 then throw 'SQLite error: ' + SQLite_codes[ret].msg
 		FS.unlink '/' + @filename
 		@db = null
@@ -409,6 +409,6 @@ handleErrors = (ret, errPtrPtr) ->
 		errPtr = getValue errPtrPtr, 'i32'
 		if errPtr isnt NULL and errPtr isnt undefined
 			msg = Pointer_stringify errPtr
-			sqlite3_free errPtr
+			sqlite4_free NULL, errPtr
 			return msg
 		else return null
