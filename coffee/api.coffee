@@ -25,7 +25,7 @@ class Statement
 	# Statements can't be created by the API user, only by Database::prepare
 	# @private
 	# @nodoc
-	constructor: (@stmt) ->
+	constructor: (@stmt, @db) ->
 		@pos = 1 # Index of the leftmost parameter is 1
 		@allocatedmem = [] # Pointers to allocated memory, that need to be freed when the statemend is destroyed
 
@@ -82,7 +82,7 @@ class Statement
 		ret = sqlite4_step @stmt
 		if ret is SQLite.ROW then return true
 		else if ret is SQLite.DONE then return false
-		else throw 'SQLite error: ' + handleErrors ret
+		else throw 'SQLite error: ' + sqlite4_errmsg(@db)
 
 	# Internal methods to retrieve data from the results of a statement that has been executed
 	# @nodoc
@@ -163,23 +163,20 @@ class Statement
 		@allocatedmem.push strptr = allocate bytes, 'i8', ALLOC_NORMAL
 		ret = sqlite4_bind_text @stmt, pos, strptr, bytes.length, 0
 		if ret is SQLite.OK then return true
-		err = handleErrors ret
-		if err isnt null then throw 'SQLite error : ' + err
+		else throw "SQLite Error: " + SQLite.errorMessages[ret]
 	# @nodoc
 	bindBlob: (array, pos = @pos++) ->
 		@allocatedmem.push blobptr = allocate array, 'i8', ALLOC_NORMAL
 		ret = sqlite4_bind_blob @stmt, pos, blobptr, array.length, 0
 		if ret is SQLite.OK then return true
-		err = handleErrors ret
-		if err isnt null then throw 'SQLite error : ' + err
+		else throw "SQLite Error: " + SQLite.errorMessages[ret]
 	# @private
 	# @nodoc
 	bindNumber: (num, pos = @pos++) ->
 		bindfunc = if num is (num|0) then sqlite4_bind_int else sqlite4_bind_double
 		ret = bindfunc @stmt, pos, num
-		if ret is SQLite.OK then return true
-		err = handleErrors ret
-		if err isnt null then throw 'SQLite error : ' + err
+		if ret isnt SQLite.OK then throw "SQLite Error: " + SQLite.errorMessages[ret]
+		return true
 	# @nodoc
 	bindNull: (pos = @pos++) -> sqlite4_bind_blob(@stmt, pos, 0,0,0) is SQLite.OK
 	# Call bindNumber or bindString appropriatly
@@ -243,8 +240,8 @@ class Database
 	constructor: (data) ->
 		@filename = 'dbfile_' + (0xffffffff*Math.random()>>>0)
 		if data? then FS.createDataFile '/', @filename, data, true, true
-		ret = sqlite4_open NULL, @filename, apiTemp
-		if ret isnt SQLite.OK then throw 'SQLite error: ' + SQLite.errorMessages[ret]
+		ret = sqlite4_open NULL, @filename, apiTemp, SQLite.OPEN_READWRITE | SQLite.OPEN_CREATE
+		if ret isnt SQLite.OK then throw 'SQLite error: ' + sqlite4_errmsg(@db)
 		@db = getValue(apiTemp, 'i32')
 		@statements = [] # A list of all prepared statements of the database
 
@@ -268,9 +265,8 @@ class Database
 			stmt['step']()
 			stmt['free']()
 		else
-			ret = sqlite4_exec @db, sql, 0, 0, apiTemp
-			err = handleErrors ret, apiTemp
-			if err isnt null then throw 'SQLite error : ' + err
+			ret = sqlite4_exec @db, sql, NULL, NULL
+			if ret isnt SQLite.OK then throw "SQLite Error: " + sqlite4_errmsg(@db)
 		return @
 
 	### Execute an SQL query, and returns the result.
@@ -370,11 +366,10 @@ class Database
 	'prepare': (sql, params) ->
 		setValue apiTemp, 0, 'i32'
 		ret = sqlite4_prepare @db, sql, -1, apiTemp, NULL
-		err = handleErrors ret, NULL
-		if err isnt null then throw 'SQLite error: ' + err
+		if ret isnt SQLite.OK then throw "SQLite Error: " + SQLite.errorMessages[ret]
 		pStmt = getValue apiTemp, 'i32' #  pointer to a statement, or null
 		if pStmt is NULL then throw 'Nothing to prepare'
-		stmt = new Statement(pStmt)
+		stmt = new Statement(pStmt, @db)
 		if params? then stmt.bind params
 		@statements.push(stmt)
 		return stmt
@@ -397,18 +392,7 @@ class Database
 	###
 	'close': ->
 		stmt['free']() for stmt in @statements
-		ret = sqlite4_close @db
+		ret = sqlite4_close @db, 0
 		if ret isnt 0 then throw 'SQLite error: ' + SQLite_codes[ret].msg
 		FS.unlink '/' + @filename
 		@db = null
-
-handleErrors = (ret, errPtrPtr) ->
-	if not errPtrPtr
-		return if ret is SQLite.OK then null else SQLite.errorMessages[ret]
-	else
-		errPtr = getValue errPtrPtr, 'i32'
-		if errPtr isnt NULL and errPtr isnt undefined
-			msg = Pointer_stringify errPtr
-			sqlite4_free NULL, errPtr
-			return msg
-		else return null

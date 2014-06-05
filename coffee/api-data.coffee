@@ -74,6 +74,11 @@ SQLite.TEXT=3
 SQLite.BLOB=4
 SQLite.NULL=5
 
+# File flags
+SQLite.OPEN_READONLY  = 1<<0
+SQLite.OPEN_READWRITE = 1<<1
+SQLite.OPEN_CREATE    = 1<<3
+
 SQLite.DENY=1
 SQLite.IGNORE=2
 SQLite.ALLOW=3

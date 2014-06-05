@@ -1,7 +1,11 @@
-sqlite4_open = Module['cwrap'] 'sqlite4_open', 'number', ['number', 'string', 'number']
-sqlite4_close = Module['cwrap'] 'sqlite4_close', 'number', ['number']
-sqlite4_exec = Module['cwrap'] 'sqlite4_exec', 'number', ['number', 'string', 'number', 'number', 'number']
+sqlite4_open = Module['cwrap'] 'sqlite4_open', 'number', ['number', 'string', 'number', 'number']
+sqlite4_close = Module['cwrap'] 'sqlite4_close', 'number', ['number', 'number']
+sqlite4_exec = Module['cwrap'] 'sqlite4_exec', 'number', ['number', 'string', 'number', 'number']
 sqlite4_free = Module['cwrap'] 'sqlite4_free', '', ['number', 'number']
+
+#Error handling
+#const char *sqlite4_errmsg(sqlite4*);
+sqlite4_errmsg = Module['cwrap'] 'sqlite4_errmsg', 'string', ['number']
 
 # Prepared statements
 ## prepare
