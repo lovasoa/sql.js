@@ -1,7 +1,7 @@
 # SQLite compiled to javascript
 [![Build Status](https://travis-ci.org/lovasoa/sql.js.svg?branch=master)](http://travis-ci.org/lovasoa/sql.js)
 
-This is a port of SQLite4 to javascript. SQLite4 is not stable, nor is this port
+This is a port of SQLite4 to javascript. SQLite4 is not stable, nor is this port.
 That said, this version of **sql.js** seems to be as stable, and much faster than the SQLite3 port.
 
 sql.js is a port of SQLite to JavaScript, by compiling the SQLite C code with Emscripten.
