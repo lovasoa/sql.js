@@ -8,6 +8,9 @@ no C bindings or node-gyp compilation here.
 
 SQLite is public domain, sql.js is MIT licensed.
 
+## Important note
+This fork has finally been merged into kripken’s original repo. Please contribute in http://github.com/kripken/sql.js instead of here. 
+
 ## Usage
 
 ```javascript
