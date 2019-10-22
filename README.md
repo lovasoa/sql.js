@@ -1,13 +1,13 @@
+# Important note
+The code in this repository is **out of date**.
+This fork has finally been merged into [kripken’s original repo](https://github.com/kripken/sql.js). Please use that repository instead of this one.
+
+
 # SQLite compiled to javascript
 [![Build Status](https://travis-ci.org/lovasoa/sql.js.svg?branch=master)](http://travis-ci.org/lovasoa/sql.js)
 
 
-## Important note
-The code in this repository is out of date.
-
-This fork has finally been merged into [kripken’s original repo](https://github.com/kripken/sql.js). Please use that repository instead of this one.
-
-##Introduction
+## Introduction
 This is my fork of sql.js, by kripken. Try it online here: http://lovasoa.github.io/sql.js/GUI/
 
 sql.js is a port of SQLite to JavaScript, by compiling the SQLite C code with Emscripten.
